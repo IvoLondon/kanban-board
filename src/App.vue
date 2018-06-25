@@ -1,60 +1,115 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <h1>{{ msg }}</h1>
-    <h2>Essential Links</h2>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank">Twitter</a></li>
-    </ul>
-    <h2>Ecosystem</h2>
-    <ul>
-      <li><a href="http://router.vuejs.org/" target="_blank">vue-router</a></li>
-      <li><a href="http://vuex.vuejs.org/" target="_blank">vuex</a></li>
-      <li><a href="http://vue-loader.vuejs.org/" target="_blank">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank">awesome-vue</a></li>
-    </ul>
+    <kanban-board :stages="stages" :blocks="blocks" @update-block="updateBlock">
+      <div v-for="block in blocks" :slot="block.id" :key="block.id">
+        <div>
+          <strong>id:</strong> {{ block.id }}
+        </div>
+        <div>
+          {{ block.title }}
+        </div>
+      </div>
+    </kanban-board>
   </div>
 </template>
 
 <script>
-export default {
-  name: 'app',
-  data () {
-    return {
-      msg: 'Welcome to Your Vue.js App'
+  import Vue from 'vue';
+  import vueKanban from 'vue-kanban';
+  import Hamoni from 'hamoni-sync';
+
+  Vue.use(vueKanban);
+
+  export default {
+    name: "app",
+    data() {
+      return {
+        stages: ["on-hold", "in-progress", "needs-review", "approved"],
+        blocks: [],
+        listPrimitive: null
+      };
+    },
+    methods: {
+      mounted: function() {
+      let hamoni = new Hamoni("a2b53b83-ae04-4e6b-8c0e-3adcc128cd7d", '7cd27bf8b8664642b1d45fca64eaf03a');
+      hamoni
+        .connect()
+        .then(() => {
+        hamoni
+            .get("blocks")
+            .then(listPrimitive => {
+                this.listPrimitive = listPrimitive;
+                this.blocks = listPrimitive.getAll();
+
+                listPrimitive.onItemUpdated(item => {
+                    //update the item at item.index
+                    this.blocks.splice(item.index, 1, item.value);
+                });
+            })
+            .catch(error => {
+            if (error == "Error getting state from server") {
+                hamoni
+                .createList("blocks", blocks)
+                .then(listPrimitive => {
+                    this.listPrimitive = listPrimitive;
+                    this.blocks = listPrimitive.getAll();
+
+                    listPrimitive.onItemUpdated(item => {
+                        //update the item at item.index
+                        this.blocks.splice(item.index, 1, item.value);
+                    });
+                })
+                .catch(console.log);
+            }
+            });
+        }).catch(console.log);
     }
-  }
-}
-</script>
+      updateBlock(id, status) {
+        //TODO: add code to update the block
+      }
+    },
+  };
 
-<style lang="scss">
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
 
-h1, h2 {
-  font-weight: normal;
-}
+  const blocks = [
+    {
+      id: 0,
+      status: "approved",
+      title: "Buy coffee machine"
+    },
+    {
+      id: 1,
+      status: "in-progress",
+      title: "Find better AirBnB options"
+    },
+    {
+      id: 2,
+      status: "on-hold",
+      title: "Approve Q3 budget"
+    },
+    {
+      id: 3,
+      status: "approved",
+      title: "Travel to Colombia"
+    },
+    {
+      id: 4,
+      status: "needs-review",
+      title: "Add Redux to the app"
+    },
+    {
+      id: 5,
+      status: "approved",
+      title: "Well, Sleep all day 👩‍🎤"
+    },
+    {
+      id: 6,
+      status: "in-progress",
+      title: "Find language exchange partner"
+    }
+  ];
+</script> 
 
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
-}
+<style land="scss">
+    @import "./assets/kanban.scss";
 </style>
