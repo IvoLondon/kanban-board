@@ -30,7 +30,12 @@
       };
     },
     methods: {
-      mounted: function() {
+      updateBlock(id, status) {
+        let block = this.blocks[id];
+        this.listPrimitive.update(id, { id, title: block.title, status }); 
+      },
+    }, 
+    mounted: function() {
       let hamoni = new Hamoni("a2b53b83-ae04-4e6b-8c0e-3adcc128cd7d", '7cd27bf8b8664642b1d45fca64eaf03a');
       hamoni
         .connect()
@@ -64,10 +69,6 @@
             });
         }).catch(console.log);
     }
-      updateBlock(id, status) {
-        //TODO: add code to update the block
-      }
-    },
   };
 
 
@@ -98,6 +99,11 @@
       title: "Add Redux to the app"
     },
     {
+      id: 4,
+      status: "needs-review",
+      title: "Do more apps"
+    },
+    {
       id: 5,
       status: "approved",
       title: "Well, Sleep all day 👩‍🎤"
@@ -111,5 +117,5 @@
 </script> 
 
 <style land="scss">
-    @import "./assets/kanban.scss";
+  /*  @import "./assets/kanban.scss"; */
 </style>
